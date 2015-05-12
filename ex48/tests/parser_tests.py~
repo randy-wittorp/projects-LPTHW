@@ -1,0 +1,55 @@
+from nose.tools import *
+from ex48 import lexicon, parser
+
+def test_peek():
+    assert_equal(parser.peek(lexicon.scan("go")), 'verb')
+    result = parser.peek(lexicon.scan("princess"))
+    assert_equal(result, 'noun')
+
+def test_match():
+    assert_equal(parser.match(lexicon.scan("go"), 'verb'), ('verb', 'go'))
+    result = parser.match(lexicon.scan("bear"), 'noun')
+    assert_equal(result, ('noun', 'bear'))
+
+def test_skip():
+    test_sentence = lexicon.scan("in the north")
+    result = parser.skip(test_sentence, 'stop')
+    assert_equal(test_sentence, ('direction', 'north'))
+
+def test_parse_verb():
+    assert_equal(parser.parse_verb(lexicon.scan("in the go")), ('verb', 'go'))
+    result = parser.parse_verb(lexicon.scan("in stop"))
+    assert_equal(result, ('verb', 'stop'))
+
+def test_parse_object():
+    assert_equal(parser.parse_object(lexicon.scan("in the princess")), 
+                 ('noun', 'princess'))
+    result = parser.parse_object(lexicon.scan("in the north"))
+    assert_equal(result, ('direction', 'north'))
+
+def test_parse_subject():
+    assert_equal(parser.parse_subject(lexicon.scan("go north"), 
+                 ('noun', 'bear')).subject,
+                 parser.Sentence(('noun', 'bear'), 
+                          ('verb', 'go'), 
+                          ('direction', 'north')).subject)
+    result = parser.parse_subject(lexicon.scan("eat cabinet"), ('noun', 'princess'))
+    assert_equal(result.subject, parser.Sentence(('noun', 'princess'), 
+                                          ('verb', 'eat'), 
+                                          ('noun', 'cabinet')).subject)
+
+def test_parse_sentence():
+    assert_equal(parser.parse_sentence(lexicon.scan("eat the bear")).subject,
+                 parser.Sentence(('noun', 'player'), 
+                                 ('verb', 'eat'), 
+                                 ('noun', 'bear')).subject)
+    result = parser.parse_sentence(lexicon.scan("go north"))
+    assert_equal(result.subject, parser.Sentence(('noun', 'player'), 
+                                                 ('verb', 'go'), 
+                                                 ('direction', 'north')).subject)
+    assert_equal(result.verb, parser.Sentence(('noun', 'player'), 
+                                              ('verb', 'go'), 
+                                              ('direction', 'north')).verb)
+    assert_equal(result.object, parser.Sentence(('noun', 'player'), 
+                                          ('verb', 'go'), 
+                                          ('direction', 'north')).object)
